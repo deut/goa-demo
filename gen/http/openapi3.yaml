@@ -1,0 +1,233 @@
+openapi: 3.0.3
+info:
+    title: Goa API
+    version: 0.0.1
+servers:
+    - url: http://localhost:80
+      description: Default server for hamster
+paths:
+    /hamster/{hamsterID}:
+        get:
+            tags:
+                - hamster
+            summary: show hamster
+            description: Choose your hamster
+            operationId: hamster#show
+            parameters:
+                - name: hamsterID
+                  in: path
+                  description: Hamster UUID
+                  required: true
+                  schema:
+                    type: string
+                    description: Hamster UUID
+                    example: 91cb8b33-0dc8-44f9-9ec9-79891e0ae141
+                    format: uuid
+                  example: a438df32-4b7a-4feb-8667-1cf960ec1dda
+            responses:
+                "200":
+                    description: OK response.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Hamster'
+                            example:
+                                colors:
+                                    - brown
+                                    - white
+                                id: 123e4567-e89b-12d3-a456-426614174000
+                                name: Fluffy
+                "404":
+                    description: 'not_found: Not Found response.'
+                    content:
+                        application/vnd.goa.error:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+    /hamsters:
+        get:
+            tags:
+                - hamster
+            summary: list hamster
+            description: List hamsters with optional pagination.
+            operationId: hamster#list
+            responses:
+                "200":
+                    description: OK response.
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Hamster'
+                                example:
+                                    - colors:
+                                        - brown
+                                        - white
+                                      id: 123e4567-e89b-12d3-a456-426614174000
+                                      name: Fluffy
+                                    - colors:
+                                        - brown
+                                        - white
+                                      id: 123e4567-e89b-12d3-a456-426614174000
+                                      name: Fluffy
+                                    - colors:
+                                        - brown
+                                        - white
+                                      id: 123e4567-e89b-12d3-a456-426614174000
+                                      name: Fluffy
+                                    - colors:
+                                        - brown
+                                        - white
+                                      id: 123e4567-e89b-12d3-a456-426614174000
+                                      name: Fluffy
+                            example:
+                                - colors:
+                                    - brown
+                                    - white
+                                  id: 123e4567-e89b-12d3-a456-426614174000
+                                  name: Fluffy
+                                - colors:
+                                    - brown
+                                    - white
+                                  id: 123e4567-e89b-12d3-a456-426614174000
+                                  name: Fluffy
+                                - colors:
+                                    - brown
+                                    - white
+                                  id: 123e4567-e89b-12d3-a456-426614174000
+                                  name: Fluffy
+    /haster:
+        post:
+            tags:
+                - hamster
+            summary: create hamster
+            description: Add newborn hamster
+            operationId: hamster#create
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/HamsterPayload'
+                        example:
+                            colors:
+                                - brown
+                                - white
+                            name: Fluffy
+            responses:
+                "201":
+                    description: Created response.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Hamster'
+                            example:
+                                colors:
+                                    - brown
+                                    - white
+                                id: 123e4567-e89b-12d3-a456-426614174000
+                                name: Fluffy
+components:
+    schemas:
+        Error:
+            type: object
+            properties:
+                fault:
+                    type: boolean
+                    description: Is the error a server-side fault?
+                    example: false
+                id:
+                    type: string
+                    description: ID is a unique identifier for this particular occurrence of the problem.
+                    example: 123abc
+                message:
+                    type: string
+                    description: Message is a human-readable explanation specific to this occurrence of the problem.
+                    example: parameter 'p' must be an integer
+                name:
+                    type: string
+                    description: Name is the name of this class of errors.
+                    example: bad_request
+                temporary:
+                    type: boolean
+                    description: Is the error temporary?
+                    example: false
+                timeout:
+                    type: boolean
+                    description: Is the error a timeout?
+                    example: false
+            example:
+                fault: false
+                id: 123abc
+                message: parameter 'p' must be an integer
+                name: bad_request
+                temporary: false
+                timeout: true
+            required:
+                - name
+                - id
+                - message
+                - temporary
+                - timeout
+                - fault
+        Hamster:
+            type: object
+            properties:
+                colors:
+                    type: array
+                    items:
+                        type: string
+                        example: Consequatur ea aspernatur.
+                    description: List of colors the hamster can have.
+                    example:
+                        - brown
+                        - white
+                    maxItems: 1
+                id:
+                    type: string
+                    description: Unique concert ID
+                    example: 123e4567-e89b-12d3-a456-426614174000
+                    format: uuid
+                name:
+                    type: string
+                    description: Name of hamster
+                    example: Fluffy
+                    minLength: 1
+            description: A hamster
+            example:
+                colors:
+                    - brown
+                    - white
+                id: 123e4567-e89b-12d3-a456-426614174000
+                name: Fluffy
+            required:
+                - id
+                - name
+                - colors
+        HamsterPayload:
+            type: object
+            properties:
+                colors:
+                    type: array
+                    items:
+                        type: string
+                        example: Illo iusto rem.
+                    description: List of colors the hamster can have.
+                    example:
+                        - brown
+                        - white
+                    maxItems: 1
+                name:
+                    type: string
+                    description: Name of hamster
+                    example: Fluffy
+                    minLength: 1
+            description: A hamster
+            example:
+                colors:
+                    - brown
+                    - white
+                name: Fluffy
+tags:
+    - name: hamster
+      description: Hamsters distribution API

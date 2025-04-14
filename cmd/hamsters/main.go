@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	goahttp "goa.design/goa/v3/http"
 
+	"goa-demo/gen/hamster"
 	genhamsters "goa-demo/gen/hamster"
-	genhttp "goa-demo/gen/http/hamster/server"
 )
 
 type HamsterService struct{}
@@ -55,22 +54,45 @@ func (m *HamsterService) Show(_ context.Context, p *genhamsters.ShowPayload) (re
 func main() {
 	svc := &HamsterService{}
 	endpoints := genhamsters.NewEndpoints(svc)
-	mux := goahttp.NewMuxer()
-	requestDecoder := goahttp.RequestDecoder
-	responseEncoder := goahttp.ResponseEncoder
-	handler := genhttp.New(endpoints, mux, requestDecoder, responseEncoder, nil, nil)
+	mux := gin.Default()
 
-	genhttp.Mount(mux, handler)
-
-	port := "3000"
-	server := &http.Server{Addr: ":" + port, Handler: mux}
-
-	for _, mount := range handler.Mounts {
-		log.Printf("%q mounted on %s %s", mount.Method, mount.Verb, mount.Pattern)
+	requestDecoder := func(ctx context.Context, c *gin.Context) (interface{}, error) {
+		var req hamster.HamsterPayload
+		if err := c.ShouldBindJSON(&req); err != nil {
+			return nil, err
+		}
+		return &req, nil
 	}
 
-	log.Printf("Starting selling hamsters :%s", port)
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+	responseEncoder := func(ctx context.Context, v interface{}) {
+		c := ctx.Value("gin").(*gin.Context)
+		c.JSON(http.StatusOK, v)
 	}
+
+	mux.POST("/hamsters", func(c *gin.Context) {
+		ctx := context.WithValue(c.Request.Context(), "gin", c)
+		req, err := requestDecoder(ctx, c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, err)
+			return
+		}
+		res, err := endpoints.Create(ctx, req.(*genhamsters.HamsterPayload))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, err)
+			return
+		}
+		responseEncoder(ctx, res)
+	})
+
+	mux.GET("/hamsters", func(c *gin.Context) {
+		ctx := context.WithValue(c.Request.Context(), "gin", c)
+		res, err := endpoints.List(ctx, nil)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, err)
+			return
+		}
+		responseEncoder(ctx, res)
+	})
+
+	mux.Run(":8080")
 }
